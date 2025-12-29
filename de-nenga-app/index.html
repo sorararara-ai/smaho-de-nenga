@@ -281,7 +281,7 @@
                             スマホde年賀！は、年賀状代わりにLINEやSNSで送れる、<br className="hidden md:block"/>ギフト付きデジタル年賀状です。
                         </p>
                         {/* ビジュアル説明：アイコンとステップ図 */}
-                            <div className="w-full max-w-lg bg-stone-50 rounded-2xl p-6 border border-stone-200">
+                            <div className="text-left bg-stone-50 p-5 md:p-6 rounded-2xl space-y-4 mt-6 border border-stone-100">
                                 <h3 className="font-bold text-stone-700 mb-6 flex items-center justify-center gap-2">
                                     <IconSparkles className="text-yellow-500" /> 
                                     3ステップで簡単！
@@ -296,7 +296,7 @@
                                         </div>
                                         <div className="text-center">
                                             <span className="block text-sm font-bold text-stone-700">作成</span>
-                                            <span className="block text-[10px] text-stone-500">好きなデザインで</span>
+                                            <span className="block text-[10px] text-stone-500">好きな<br/>デザインで</span>
                                         </div>
                                     </div>
 
@@ -308,7 +308,7 @@
                                         </div>
                                         <div className="text-center">
                                             <span className="block text-sm font-bold text-stone-700">ギフト添付</span>
-                                            <span className="block text-[10px] text-stone-500">URLを貼るだけ</span>
+                                            <span className="block text-[10px] text-stone-500">URLを<br/>貼るだけ</span>
                                         </div>
                                     </div>
 
@@ -320,7 +320,7 @@
                                         </div>
                                         <div className="text-center">
                                             <span className="block text-sm font-bold text-stone-700">SNS送信</span>
-                                            <span className="block text-[10px] text-stone-500">LINEなどで送る</span>
+                                            <span className="block text-[10px] text-stone-500">LINE等で送る</span>
                                         </div>
                                     </div>
                                 </div>
@@ -365,7 +365,7 @@
                                 <div className="flex-1 space-y-3">
                                     <h4 className="font-bold text-lg text-stone-700">デジタルギフトを購入！</h4>
                                     <p className="text-sm text-stone-500">
-                                        まずは、贈りたいデジタルギフトを購入して、ギフトのURLをコピーしておいてね！
+                                        まずは、贈りたいデジタルギフトを購入して、ギフトのURLをコピーしておいてね！<br/>※デジタルギフト無しでも送れます。
                                     </p>
                                     <div className="bg-stone-50 p-4 rounded-xl space-y-3 mt-3">
                                         <p className="text-xs font-bold text-stone-500">オススメのデジタルギフト購入サイト</p>
@@ -551,28 +551,25 @@
                                 )}
                             </div>
 
-                            {/* Fixed Bottom Layout */}
-                            {/* Message Area */}
-                            <div className="absolute top-60 bottom-5 left-[9.5rem] right-2 pt-2 overflow-hidden pointer-events-none">
+                            {/* 修正箇所: giftUrlの有無でレイアウトクラスを切り替え */}
+                            <div className={`absolute top-60 bottom-5 pt-2 overflow-hidden pointer-events-none ${giftUrl ? 'left-[9.5rem] right-2 text-left' : 'left-6 right-6 text-center'}`}>
                                 <div className={`text-stone-800 whitespace-pre-wrap ${template.fontBody} ${messageStyle}`}>
                                     {message || "ここにメッセージが入ります"}
                                 </div>
                             </div>
 
                             {/* QR Code Area */}
-                            <div className="absolute top-60 left-0 w-32 pt-2 flex flex-col justify-start items-center -ml-1 pointer-events-none">
-                                <div className="relative">
-                                    {giftUrl ? (
+                            {/* 修正箇所: giftUrlがない場合はエリアごと非表示にする */}
+                            {giftUrl && (
+                                <div className="absolute top-60 left-0 w-32 pt-2 flex flex-col justify-start items-center -ml-1 pointer-events-none">
+                                    <div className="relative">
                                         <div className="flex flex-col items-center">
                                             <p className="text-[10px] mb-2 font-bold tracking-tighter" style={{ color: template.mainColor }}>新年のギフトを受取る</p>
-                                            
                                             <div className="bg-white p-2 border border-stone-200 shadow-sm relative">
-                                                {/* Corners */}
                                                 <div className="absolute -top-1 -left-1 w-2 h-2 border-t border-l" style={{ borderColor: template.mainColor }}></div>
                                                 <div className="absolute -top-1 -right-1 w-2 h-2 border-t border-r" style={{ borderColor: template.mainColor }}></div>
                                                 <div className="absolute -bottom-1 -left-1 w-2 h-2 border-b border-l" style={{ borderColor: template.mainColor }}></div>
                                                 <div className="absolute -bottom-1 -right-1 w-2 h-2 border-b border-r" style={{ borderColor: template.mainColor }}></div>
-                                                
                                                 <img 
                                                     src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(giftUrl)}&color=${template.mainColor.replace('#', '')}&bgcolor=ffffff&margin=0`}
                                                     alt="Gift QR"
@@ -583,25 +580,17 @@
                                                 QRコードをタップするか、<br/>カメラで読み込むことで<br/>ギフトが受け取れます。
                                             </p>
                                         </div>
-                                    ) : (
-                                        <div className="w-20 h-20 border border-dashed border-stone-300 flex flex-col items-center justify-center rounded bg-stone-50">
-                                            <IconQrCode size={20} className="text-stone-300 mb-1" />
-                                            <span className="text-[8px] text-stone-400">QRコード</span>
-                                        </div>
-                                    )}
+                                    </div>
+                                    
+                                    <div className="mt-4 w-10 h-10 opacity-80">
+                                        {template.decorType === 'horse-mod' ? <DecorHorseMod color={template.mainColor} /> : 
+                                         template.decorType === 'horse-pop' ? <DecorHorsePop color={template.mainColor} /> :
+                                         <DecorHorseTrad color={template.mainColor} />}
+                                    </div>
                                 </div>
-                                
-                                {/* Decor */}
-                                <div className="mt-4 w-10 h-10 opacity-80">
-                                    {template.decorType === 'horse-mod' ? <DecorHorseMod color={template.mainColor} /> : 
-                                     template.decorType === 'horse-pop' ? <DecorHorsePop color={template.mainColor} /> :
-                                     <DecorHorseTrad color={template.mainColor} />}
-                                </div>
-                            </div>
-
+                            )}
                         </div>
 
-                        {/* Bottom Decor */}
                         <div className="absolute bottom-[-10px] left-[-10px] w-24 h-24 opacity-10 pointer-events-none">
                             {template.decorType === 'horse-mod' ? <DecorHorseMod color={template.mainColor} /> : 
                              template.decorType === 'horse-pop' ? <DecorHorsePop color={template.mainColor} /> :
