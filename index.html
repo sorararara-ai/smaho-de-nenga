@@ -9,7 +9,6 @@
     <meta property="og:title" content="スマホde年賀！" />  
     <meta property="og:description" content="写真とデジタルギフトとメッセージを入れて、あなただけの年賀状を作ろう！" />  
     <meta property="og:type" content="website" />  
-    <meta property="og:image" content="ここに表示させたい画像のURL" />  
       
     <!-- React & ReactDOM -->  
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>  
@@ -41,9 +40,6 @@
         .font-hina { font-family: 'Hina Mincho', serif; }  
         .font-maru { font-family: 'Zen Maru Gothic', sans-serif; }  
   
-        /* --- 背景パターン --- */  
-        /* JS側でインラインスタイルとして定義するため、CSSクラスは削除 */  
-          
         /* 縦書き設定 */  
         .vertical-text {  
             writing-mode: vertical-rl;  
@@ -124,27 +120,30 @@
         const CARD_WIDTH = 378;  
         const CARD_HEIGHT = 559;  
   
+        // --- Embedded Sample Image (SVG Data URI) for reliable display ---  
+        // これにより外部画像ファイルが不要になり、確実に表示されます。  
+        const SAMPLE_IMAGE_DATA_URI = `data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='600' viewBox='0 0 400 600' style='background-color:%23fff'%3E%3Cdefs%3E%3Cpattern id='p' width='20' height='20' patternUnits='userSpaceOnUse'%3E%3Crect width='10' height='10' fill='%23ffe4e6'/%3E%3Crect x='10' y='10' width='10' height='10' fill='%23ffe4e6'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23p)'/%3E%3Crect x='20' y='20' width='360' height='560' fill='white' rx='10'/%3E%3Ctext x='50%25' y='150' font-family='serif' font-size='40' text-anchor='middle' fill='%23D9333F'%3E謹賀新年%3C/text%3E%3Ctext x='50%25' y='200' font-family='sans-serif' font-size='16' text-anchor='middle' fill='%23555'%3EHappy New Year%3C/text%3E%3Ccircle cx='200' cy='320' r='80' fill='%23fef3c7'/%3E%3Ctext x='200' y='330' font-size='60' text-anchor='middle'%3E🐍%3C/text%3E%3Ctext x='50%25' y='450' font-family='serif' font-size='14' text-anchor='middle' fill='%23333'%3E昨年は大変お世話になりました%3C/text%3E%3Ctext x='50%25' y='475' font-family='serif' font-size='14' text-anchor='middle' fill='%23333'%3E本年もよろしくお願いいたします%3C/text%3E%3Crect x='160' y='500' width='80' height='80' fill='none' stroke='%23ccc'/%3E%3Ctext x='200' y='545' font-size='10' text-anchor='middle' fill='%23999'%3EGIFT%3C/text%3E%3C/svg%3E`;  
+  
         // --- Helper: SVG to Data URL ---  
         const svgToDataUrl = (svgString) => {  
             return `url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}")`;  
         };  
   
-        // --- Pattern Styles (Inline styles for better html2canvas support) ---  
-        // 全て市松模様（四角）のデザインで統一し、色のみ変更する  
+        // --- Pattern Styles ---  
         const PATTERN_STYLES = {  
-            seigaiha: { // 伝統 (赤) - 薄い赤の市松模様  
+            seigaiha: {  
                 backgroundColor: '#ffffff',  
                 backgroundImage: svgToDataUrl(`<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="10" height="10" fill="#ffe4e6"/><rect x="10" y="10" width="10" height="10" fill="#ffe4e6"/></svg>`),  
                 backgroundSize: '20px 20px',  
                 backgroundRepeat: 'repeat'  
             },  
-            ichimatsu: { // モダン (青) - 薄い青の市松模様  
+            ichimatsu: {  
                 backgroundColor: '#ffffff',  
                 backgroundImage: svgToDataUrl(`<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="10" height="10" fill="#e0f2fe"/><rect x="10" y="10" width="10" height="10" fill="#e0f2fe"/></svg>`),  
                 backgroundSize: '20px 20px',  
                 backgroundRepeat: 'repeat'  
             },  
-            dots: { // ポップ (黄) - 薄い黄色の市松模様  
+            dots: {  
                 backgroundColor: '#ffffff',  
                 backgroundImage: svgToDataUrl(`<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="10" height="10" fill="#fef3c7"/><rect x="10" y="10" width="10" height="10" fill="#fef3c7"/></svg>`),  
                 backgroundSize: '20px 20px',  
@@ -157,7 +156,7 @@
             {  
                 id: 'trad-red',  
                 name: '伝統 (赤)',  
-                mainColor: '#D9333F', // Japanese Red  
+                mainColor: '#D9333F',  
                 patternStyle: PATTERN_STYLES.seigaiha,  
                 fontHeading: 'font-hina',  
                 fontBody: 'font-mincho',  
@@ -166,7 +165,7 @@
             {  
                 id: 'mod-blue',  
                 name: 'モダン (青)',  
-                mainColor: '#0369a1', // Sky Blue 700  
+                mainColor: '#0369a1',  
                 patternStyle: PATTERN_STYLES.ichimatsu,  
                 fontHeading: 'font-maru',  
                 fontBody: 'font-maru',  
@@ -175,7 +174,7 @@
             {  
                 id: 'pop-yellow',  
                 name: 'ポップ (黄)',  
-                mainColor: '#b45309', // Amber 700  
+                mainColor: '#b45309',  
                 patternStyle: PATTERN_STYLES.dots,  
                 fontHeading: 'font-maru',  
                 fontBody: 'font-mincho',  
@@ -183,58 +182,24 @@
             }  
         ];  
   
-        // --- Icons (Simple SVG Components) ---  
-        const IconGift = ({ size = 20, className = "" }) => (  
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.9 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/></svg>  
-        );  
-        const IconQrCode = ({ size = 20, className = "" }) => (  
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/></svg>  
-        );  
-        const IconUser = ({ size = 20, className = "" }) => (  
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>  
-        );  
-        const IconType = ({ size = 20, className = "" }) => (  
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" x2="15" y1="20" y2="20"/><line x1="12" x2="12" y1="4" y2="20"/></svg>  
-        );  
-        const IconShare = ({ size = 20, className = "" }) => (  
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>  
-        );  
-        const IconCopy = ({ size = 20, className = "" }) => (  
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>  
-        );  
-        const IconSparkles = ({ size = 20, className = "" }) => (  
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M9 3v4"/><path d="M3 9h4"/></svg>  
-        );  
-        const IconImage = ({ size = 20, className = "" }) => (  
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>  
-        );  
-        const IconTrash = ({ size = 20, className = "" }) => (  
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>  
-        );  
-        const IconPrinter = ({ size = 20, className = "" }) => (  
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>  
-        );  
-        const IconX = ({ size = 20, className = "" }) => (  
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>  
-        );  
-        const IconHand = ({ size = 20, className = "" }) => (  
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>  
-        );  
-        const IconMagic = ({ size = 20, className = "" }) => (  
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg>  
-        );  
-        const IconPalette = ({ size = 20, className = "" }) => (  
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>  
-        );  
-        const IconExternalLink = ({ size = 16, className = "" }) => (  
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/></svg>  
-        );  
-        const IconCheckCircle = ({ size = 20, className = "" }) => (  
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>  
-        );  
+        // --- Icons ---  
+        const IconGift = ({ size = 20, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.9 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/></svg>);  
+        const IconQrCode = ({ size = 20, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/></svg>);  
+        const IconUser = ({ size = 20, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>);  
+        const IconType = ({ size = 20, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" x2="15" y1="20" y2="20"/><line x1="12" x2="12" y1="4" y2="20"/></svg>);  
+        const IconShare = ({ size = 20, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>);  
+        const IconCopy = ({ size = 20, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>);  
+        const IconSparkles = ({ size = 20, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M9 3v4"/><path d="M3 9h4"/></svg>);  
+        const IconImage = ({ size = 20, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>);  
+        const IconTrash = ({ size = 20, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>);  
+        const IconX = ({ size = 20, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>);  
+        const IconHand = ({ size = 20, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>);  
+        const IconMagic = ({ size = 20, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg>);  
+        const IconPalette = ({ size = 20, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>);  
+        const IconExternalLink = ({ size = 16, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/></svg>);  
+        const IconCheckCircle = ({ size = 20, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>);  
   
-  
-        // --- Decoration Components (Horse Themed) ---  
+        // --- Decoration Components ---  
         const DecorHorseTrad = ({ color }) => (  
             <svg viewBox="0 0 24 24" className="w-full h-full" fill={color}>  
                 <path d="M20,7c-1-1-2.5-1.5-4-1c-0.5-0.5-1-1-2-1c-1,0-2,0.5-2.5,1.5c-1,0-2,0.5-2.5,1.5c-0.5,1-0.5,2,0,3c-0.5,0.5-1,1.5-1,2.5c0,1,0.5,2,1.5,2.5c0.5,0.5,1.5,0.5,2.5,0c0.5-0.5,1-1,1-2c0-0.5-0.5-1-1-1.5c0.5-0.5,1.5-1,2.5-1c1,0,2-0.5,2.5-1.5c0.5-1,0-2-0.5-2.5c0.5-0.5,1.5-0.5,2.5,0.5c1,1,1.5,2.5,1,4c-0.5,1.5-2,2.5-3.5,2.5c-1,0-2-0.5-2.5-1.5c-0.5-1-0.5-2,0-3" />  
@@ -252,12 +217,6 @@
                 <path d="M12,8 c-1,-1 -2,-1 -3,0 c-1,1 -1,2 0,3 l3,3 l3,-3 c1,-1 1,-2 0,-3 c-1,-1 -2,-1 -3,0" fill="#FFF" opacity="0.8" />  
             </svg>  
         );  
-        const UmeFlower = ({ className, color }) => (  
-            <svg viewBox="0 0 24 24" className={className} fill={color}>  
-                <path d="M12,2 C13.5,2 14.8,3 15.5,4.2 C16.2,3 17.5,2 19,2 C21.2,2 23,3.8 23,6 C23,7.5 22,8.8 20.8,9.5 C22,10.2 23,11.5 23,13 C23,15.2 21.2,17 19,17 C17.5,17 16.2,16 15.5,14.8 C14.8,16 13.5,17 12,17 C9.8,17 8,15.2 8,13 C8,11.5 9,10.2 10.2,9.5 C9,8.8 8,7.5 8,6 C8,3.8 9.8,2 12,2 Z" />  
-                <circle cx="12" cy="9.5" r="1.5" fill="#FFF5E1" />  
-            </svg>  
-        );  
   
         // --- Landing Page Component ---  
         const LandingPage = ({ onStart, mainColor }) => {  
@@ -271,20 +230,21 @@
                                 「年賀状を出したかったのに、<br/>  
                                 もう間に合わない...」<br/>  
                                 そんな時は、<br/>  
-                                <span className="text-xl font-bold" style={{color: mainColor}}>「スマホde年賀！」</span> 
+                                <span className="text-xl font-bold" style={{color: mainColor}}>「スマホde年賀！」</span>   
                             </p>  
                         </div>  
   
                         {/* Image & Visual Description Container */}  
                         <div className="flex flex-col items-center mb-8">  
-                            {/* 画像の挿入：少し回転をつけて配置 */}  
+                            {/* 画像の挿入：確実な表示のためにEmbedded SVGを使用 */}  
                             <img   
-                                src="./サンプル画像2.jpg"   
+                                src={SAMPLE_IMAGE_DATA_URI}   
                                 alt="スマートお年賀サンプル"   
                                 className="max-w-[80%] md:max-w-[280px] h-auto object-contain shadow-lg rounded-lg mb-8 transform rotate-3 hover:rotate-0 transition-transform duration-500"  
-                                onError={(e) => { 
-                                    console.error('画像の読み込みに失敗しました:', e.target.src);
-                                    e.target.style.display = 'none'; 
+                                onError={(e) => {  
+                                    // 万が一Base64が壊れていた場合のフォールバック（通常は不要）  
+                                    console.error('画像の読み込みに失敗しました');  
+                                    e.target.style.display = 'none';  
                                 }}  
                             />  
                               
@@ -296,10 +256,8 @@
                                 </h3>  
                                   
                                 <div className="flex items-start justify-between relative">  
-                                    {/* PC用: 横線 */}  
                                     <div className="absolute top-6 left-12 right-12 h-0.5 bg-stone-300 -z-10 hidden md:block"></div>  
                                       
-                                    {/* Step 1 */}  
                                     <div className="flex flex-col items-center gap-2 flex-1">  
                                         <div className="w-12 h-12 bg-white border-2 border-[#D9333F] rounded-full flex items-center justify-center text-[#D9333F] shadow-sm z-10">  
                                             <IconMagic size={24} />  
@@ -310,10 +268,8 @@
                                         </div>  
                                     </div>  
   
-                                    {/* スマホ用: 矢印 */}  
                                     <div className="self-center pt-3 text-stone-300 md:hidden">▶</div>  
   
-                                    {/* Step 2 */}  
                                     <div className="flex flex-col items-center gap-2 flex-1">  
                                         <div className="w-12 h-12 bg-white border-2 border-yellow-500 rounded-full flex items-center justify-center text-yellow-500 shadow-sm z-10">  
                                             <IconGift size={24} />  
@@ -324,10 +280,8 @@
                                         </div>  
                                     </div>  
   
-                                    {/* スマホ用: 矢印 */}  
                                     <div className="self-center pt-3 text-stone-300 md:hidden">▶</div>  
   
-                                    {/* Step 3 */}  
                                     <div className="flex flex-col items-center gap-2 flex-1">  
                                         <div className="w-12 h-12 bg-white border-2 border-green-500 rounded-full flex items-center justify-center text-green-500 shadow-sm z-10">  
                                             <IconShare size={24} />  
@@ -391,11 +345,11 @@
                                     <div className="bg-stone-50 p-4 rounded-xl space-y-3 mt-3">  
                                         <p className="text-xs font-bold text-stone-500">オススメのデジタルギフト購入サイト</p>  
                                           
-                                        <a href="https://giftee.com/?srsltid=AfmBOopn__piridn-qPv4jq6n-VFdZDwuXC45jVmM_Xb42Dz-q4-XUSY" target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 bg-white rounded-lg border border-stone-200 hover:border-[#D9333F] transition-colors group">  
+                                        <a href="https://giftee.com/" target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 bg-white rounded-lg border border-stone-200 hover:border-[#D9333F] transition-colors group">  
                                             <span className="font-bold text-stone-700 group-hover:text-[#D9333F] transition-colors">giftee (ギフティ)</span>  
                                             <IconExternalLink className="text-stone-400 group-hover:text-[#D9333F]" />  
                                         </a>  
-
+  
                                         <a href="https://linegift.line.me/about/" target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 bg-white rounded-lg border border-stone-200 hover:border-[#D9333F] transition-colors group">  
                                             <div>  
                                                 <span className="font-bold text-stone-700 group-hover:text-[#D9333F] transition-colors">LINEギフト</span>  
@@ -447,14 +401,14 @@
             );  
         };  
   
-        // --- Nengajo Card Component (Shared for Preview and Capture) ---  
+        // --- Nengajo Card Component ---  
         const NengajoCard = ({   
             recipientName,   
             message,   
             giftUrl,   
             backgroundImage,   
             messageStyle,   
-            template, // Selected Template Object  
+            template,  
             imageScale,  
             imagePos,  
             onDragStart,  
@@ -471,7 +425,6 @@
                     style={{   
                         width: `${CARD_WIDTH}px`,   
                         height: `${CARD_HEIGHT}px`,  
-                        // 固定サイズ設定  
                         minWidth: `${CARD_WIDTH}px`,  
                         maxWidth: `${CARD_WIDTH}px`,  
                         minHeight: `${CARD_HEIGHT}px`,  
@@ -479,29 +432,28 @@
                         boxSizing: 'border-box'  
                     }}   
                 >  
-                    {/* --- Background Layer (Applied via Inline Style for html2canvas compatibility) --- */}  
+                    {/* Background Layer */}  
                     <div   
                         style={{  
                             position: 'absolute',  
                             inset: 0,  
                             zIndex: 0,  
                             pointerEvents: 'none',  
-                            ...template.patternStyle // Inject pattern style directly  
+                            ...template.patternStyle  
                         }}  
                     ></div>  
                     <div className="absolute inset-0 border-[10px] border-white z-10 pointer-events-none"></div>  
   
-                    {/* --- Content Container --- */}  
+                    {/* Content Container */}  
                     <div className="relative z-10 flex flex-col h-full p-6">  
                           
-                        {/* Top Section: Header & Stamp */}  
+                        {/* Top Section */}  
                         <div className="flex justify-between items-start mb-2 pointer-events-none">  
                             <div className="flex flex-col gap-1">  
                                 <h2 className={`text-4xl ${template.fontHeading} leading-none`} style={{ writingMode: 'horizontal-tb', color: template.mainColor }}>  
                                     謹賀新年  
                                 </h2>  
                                 <p className={`text-lg tracking-[0.2em] ml-1 ${template.fontHeading}`} style={{ color: template.mainColor }}>Happy New Year</p>  
-                                {/* Recipient Name */}  
                                 {recipientName && (  
                                     <div   
                                         className={`mt-3 ${template.fontBody} text-2xl tracking-normal border-b inline-block self-start pb-1`}   
@@ -511,14 +463,14 @@
                                     </div>  
                                 )}  
                             </div>  
-                            {/* Postage Stamp Area */}  
+                            {/* Postage Stamp */}  
                             <div className="flex flex-col items-center justify-center p-2 opacity-80">  
                                 <span className={`text-4xl font-bold tracking-widest leading-none ${template.fontHeading}`} style={{ color: template.mainColor, textShadow: '1px 1px 0 #fff' }}>2026</span>  
                                 <span className={`text-lg font-bold tracking-widest leading-none mt-1 ${template.fontHeading}`} style={{ color: template.mainColor }}>年</span>  
                             </div>  
                         </div>  
   
-                        {/* Main Content Area - Fixed Layout */}  
+                        {/* Main Content Area */}  
                         <div className="flex-grow relative w-full">  
                               
                             {/* Photo Area */}  
@@ -562,7 +514,6 @@
                                 )}  
                             </div>  
   
-                            {/* Fixed Bottom Layout */}  
                             {/* Message Area */}  
                             <div className="absolute top-60 bottom-5 left-[9.5rem] right-2 pt-2 overflow-hidden pointer-events-none">  
                                 <div className={`text-stone-800 whitespace-pre-wrap ${template.fontBody} ${messageStyle}`}>  
@@ -587,6 +538,7 @@
                                                 <img   
                                                     src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(giftUrl)}&color=${template.mainColor.replace('#', '')}&bgcolor=ffffff&margin=0`}  
                                                     alt="Gift QR"  
+                                                    crossOrigin="anonymous"   
                                                     className="w-20 h-20"  
                                                 />  
                                             </div>  
@@ -649,7 +601,7 @@
               
             const [isLandscape, setIsLandscape] = useState(false);  
   
-            // Calculate font size based on message length  
+            // Calculate font size  
             const messageStyle = useMemo(() => {  
                 const len = message.length;  
                 if (len < 50) return "text-sm leading-[1.3] tracking-widest";   
@@ -708,50 +660,54 @@
   
             const handleCreateImage = async () => {  
                 setIsProcessing(true);  
-                try {
-                    await document.fonts.ready;  
+                try {  
+                    // フォントの読み込み待機（タイムアウト付き）  
+                    await Promise.race([  
+                        document.fonts.ready,  
+                        new Promise(resolve => setTimeout(resolve, 1000))  
+                    ]);  
+  
                     const element = document.getElementById('capture-target');  
-                    if (!element) {
-                        console.error('capture-target要素が見つかりません');
-                        alert('エラー: 年賀状の要素が見つかりませんでした。ページを再読み込みしてください。');
-                        setIsProcessing(false);
-                        return;
-                    }
-                    
-                    // 重要: 固定サイズキャプチャ設定 + 背景色なし(透過OK)だがインラインスタイルで背景を描画  
+                    if (!element) {  
+                        throw new Error('キャプチャ対象要素が見つかりません');  
+                    }  
+                      
+                    // html2canvasの設定をスマホ向けに最適化  
                     const canvas = await html2canvas(element, {  
-                        scale: 3,   
-                        useCORS: true,   
+                        scale: 2, // 解像度を落としてメモリ不足を回避（重要）  
+                        useCORS: true,  
+                        allowTaint: true,  
                         backgroundColor: null,  
-                        width: CARD_WIDTH,   
-                        height: CARD_HEIGHT,   
-                        windowWidth: 1600, // PCサイズ偽装  
+                        width: CARD_WIDTH,  
+                        height: CARD_HEIGHT,  
+                        windowWidth: 1600,  
                         windowHeight: 1200,  
-                        scrollX: 0,   
+                        scrollX: 0,  
                         scrollY: 0,  
+                        logging: false, // デバッグログをオフに  
                         onclone: (clonedDoc) => {  
                             const target = clonedDoc.getElementById('capture-target');  
                             if (target) {  
-                                target.style.display = 'block';   
-                                target.style.visibility = 'visible';   
-                                target.style.opacity = '1';   
+                                // クローンされた要素は確実に表示状態にする  
+                                target.style.display = 'block';  
+                                target.style.visibility = 'visible';  
+                                target.style.opacity = '1';  
                                 target.style.transform = 'none';  
-                                target.style.width = `${CARD_WIDTH}px`;  
-                                target.style.height = `${CARD_HEIGHT}px`;  
                             }  
                         }  
                     });  
+  
                     const dataUrl = canvas.toDataURL("image/png");  
                     setGeneratedImage(dataUrl);  
-                    canvas.toBlob((blob) => { 
-                        if (blob) {
-                            setGeneratedBlob(blob); 
-                        }
-                        setIsProcessing(false); 
+                    canvas.toBlob((blob) => {   
+                        if (blob) {  
+                            setGeneratedBlob(blob);   
+                        }  
+                        setIsProcessing(false);   
                     }, 'image/png');  
                 } catch (error) {  
                     console.error("Generation failed:", error);  
-                    alert(`エラーが発生しました: ${error.message || '不明なエラー'}`);  
+                    alert(`画像の作成に失敗しました。\nもう一度お試しください。\nエラー: ${error.message || '不明'}`);  
                     setIsProcessing(false);  
                 }  
             };  
@@ -840,8 +796,8 @@
   
             return (  
                 <div className="min-h-screen flex flex-col pb-12 relative overflow-x-hidden">  
-                    {/* Capture Target (完全に固定・隠しエリア) */}  
-                    <div style={{ position: 'fixed', top: 0, left: 0, width: '378px', height: '559px', zIndex: -500, opacity: 0, pointerEvents: 'none', overflow: 'hidden' }}>  
+                    {/* Capture Target (画面外配置に変更して安定化) */}  
+                    <div style={{ position: 'fixed', top: 0, left: '-9999px', width: '378px', height: '559px', zIndex: -500, overflow: 'hidden' }}>  
                         <div id="capture-target" style={{ width: '378px', height: '559px', minWidth: '378px' }}>  
                             <NengajoCard   
                                 recipientName={recipientName}   
@@ -904,7 +860,6 @@
                                                 <button key={t.id} onClick={() => setSelectedTemplate(t)} className={`flex flex-col items-center gap-2 p-2 rounded-xl border-2 transition-all ${selectedTemplate.id === t.id ? 'border-[#D9333F] bg-red-50' : 'border-stone-100 hover:border-stone-300'}`}>  
                                                     <div   
                                                         className="w-full h-12 rounded-lg border border-stone-100 relative overflow-hidden"  
-                                                        // Template selection preview also needs inline styles  
                                                         style={t.patternStyle}  
                                                     >  
                                                         <div className="absolute inset-0 flex items-center justify-center text-xs" style={{color: t.mainColor}}>2026</div>  
@@ -974,14 +929,12 @@
                             </div>  
                         </main>  
                       
-  
-                        {/* Footer (Always Visible now) */}  
+                        {/* Footer */}  
                         <div className="max-w-6xl mx-auto px-4 pb-12 pt-4 text-center no-print w-full flex flex-col md:flex-row items-center justify-center gap-4">  
                             <button onClick={handleCreateImage} disabled={isProcessing} className="inline-flex items-center gap-3 px-8 py-4 rounded-full font-bold text-white text-lg transition-all hover:scale-105 active:scale-95 shadow-xl hover:shadow-2xl disabled:opacity-70 disabled:cursor-not-allowed w-full md:w-auto min-w-[300px] justify-center" style={{ backgroundColor: selectedTemplate.mainColor }}>  
                                 {isProcessing ? <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> : <IconMagic size={24} />}  
                                 <span>{isProcessing ? 'デジタル年賀状を作成' : 'デジタル年賀状を作成'}</span>  
                             </button>  
-                           
                         </div>  
                     </div>  
                 </div>  
