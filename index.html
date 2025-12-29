@@ -1,16 +1,15 @@
-バックアップ
 <!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>スマートお年賀</title>
+    <title>スマホde年賀！</title>
     
     <!-- LINEなどでシェアした時の設定 (OGP) -->
-    <meta property="og:title" content="スマートお年賀" />
+    <meta property="og:title" content="スマホde年賀！" />
     <meta property="og:description" content="写真とデジタルギフトとメッセージを入れて、あなただけの年賀状を作ろう！" />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="ここに表示させたい画像のURL" />
+    <meta property="og:image" content="https://comprehensive-harlequin-g37pqewpeq-gvsy803oyc.edgeone.dev/サンプル画像2のコピー.jpg" />
     
     <!-- React & ReactDOM -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
@@ -261,7 +260,7 @@
                                 「年賀状を出したかったのに、<br/>
                                 もう間に合わない...」<br/>
                                 そんな時は、<br/>
-                                <span className="text-xl font-bold" style={{color: mainColor}}>「スマートお年賀」</span>で！
+                                <span className="text-xl font-bold" style={{color: mainColor}}>「スマホde年賀！」</span>
                             </p>
                         </div>
 
@@ -269,7 +268,6 @@
                         <div className="mb-6 flex justify-center">
                             <img 
                                 src="サンプル画像2.jpg" 
-                                alt="スマートお年賀サンプル" 
                                 className="max-w-[80%] md:max-w-[280px] h-auto object-contain shadow-lg rounded-lg transform rotate-2"
                                 onError={(e) => {
                                     e.target.style.display = 'none'; // 万が一画像がない場合は非表示に
@@ -278,10 +276,55 @@
                         </div>
                         
                         {/* サービス説明 */}
-                        <h2 className="text-2xl md:text-3xl font-bold text-stone-700 font-mincho">スマートお年賀とは？</h2>
+                        <h2 className="text-2xl md:text-3xl font-bold text-stone-700 font-mincho">スマホde年賀！とは？</h2>
                         <p className="text-black font-medium leading-relaxed">
-                            スマートお年賀は、年賀状代わりにLINEやSNSで送れる、<br className="hidden md:block"/>ギフト付きデジタル年賀状です。
+                            スマホde年賀！は、年賀状代わりにLINEやSNSで送れる、<br className="hidden md:block"/>ギフト付きデジタル年賀状です。
                         </p>
+                        {/* ビジュアル説明：アイコンとステップ図 */}
+                            <div className="w-full max-w-lg bg-stone-50 rounded-2xl p-6 border border-stone-200">
+                                <h3 className="font-bold text-stone-700 mb-6 flex items-center justify-center gap-2">
+                                    <IconSparkles className="text-yellow-500" /> 
+                                    3ステップで簡単！
+                                </h3>
+                                
+                                <div className="flex items-start justify-between relative">
+                                    <div className="absolute top-6 left-12 right-12 h-0.5 bg-stone-300 -z-10 hidden md:block"></div>
+                                    
+                                    <div className="flex flex-col items-center gap-2 flex-1">
+                                        <div className="w-12 h-12 bg-white border-2 border-[#D9333F] rounded-full flex items-center justify-center text-[#D9333F] shadow-sm z-10">
+                                            <IconMagic size={24} />
+                                        </div>
+                                        <div className="text-center">
+                                            <span className="block text-sm font-bold text-stone-700">作成</span>
+                                            <span className="block text-[10px] text-stone-500">好きなデザインで</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="self-center pt-3 text-stone-300 md:hidden">▶</div>
+
+                                    <div className="flex flex-col items-center gap-2 flex-1">
+                                        <div className="w-12 h-12 bg-white border-2 border-yellow-500 rounded-full flex items-center justify-center text-yellow-500 shadow-sm z-10">
+                                            <IconGift size={24} />
+                                        </div>
+                                        <div className="text-center">
+                                            <span className="block text-sm font-bold text-stone-700">ギフト添付</span>
+                                            <span className="block text-[10px] text-stone-500">URLを貼るだけ</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="self-center pt-3 text-stone-300 md:hidden">▶</div>
+
+                                    <div className="flex flex-col items-center gap-2 flex-1">
+                                        <div className="w-12 h-12 bg-white border-2 border-green-500 rounded-full flex items-center justify-center text-green-500 shadow-sm z-10">
+                                            <IconShare size={24} />
+                                        </div>
+                                        <div className="text-center">
+                                            <span className="block text-sm font-bold text-stone-700">SNS送信</span>
+                                            <span className="block text-[10px] text-stone-500">LINEなどで送る</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
                         {/* 特徴リスト */}
                         <div className="text-left bg-stone-50 p-5 md:p-6 rounded-2xl space-y-4 mt-6 border border-stone-100">
@@ -326,7 +369,13 @@
                                     </p>
                                     <div className="bg-stone-50 p-4 rounded-xl space-y-3 mt-3">
                                         <p className="text-xs font-bold text-stone-500">オススメのデジタルギフト購入サイト</p>
-                                        
+                            
+
+                                        <a href="https://giftee.com/?srsltid=AfmBOopn__piridn-qPv4jq6n-VFdZDwuXC45jVmM_Xb42Dz-q4-XUSY" target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 bg-white rounded-lg border border-stone-200 hover:border-[#D9333F] transition-colors group">
+                                            <span className="font-bold text-stone-700 group-hover:text-[#D9333F] transition-colors">giftee (ギフティ)</span>
+                                            <IconExternalLink className="text-stone-400 group-hover:text-[#D9333F]" />
+                                        </a>
+
                                         <a href="https://linegift.line.me/about/" target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 bg-white rounded-lg border border-stone-200 hover:border-[#D9333F] transition-colors group">
                                             <div>
                                                 <span className="font-bold text-stone-700 group-hover:text-[#D9333F] transition-colors">LINEギフト</span>
@@ -335,10 +384,6 @@
                                             <IconExternalLink className="text-stone-400 group-hover:text-[#D9333F]" />
                                         </a>
 
-                                        <a href="https://giftee.com/?srsltid=AfmBOopn__piridn-qPv4jq6n-VFdZDwuXC45jVmM_Xb42Dz-q4-XUSY" target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 bg-white rounded-lg border border-stone-200 hover:border-[#D9333F] transition-colors group">
-                                            <span className="font-bold text-stone-700 group-hover:text-[#D9333F] transition-colors">giftee (ギフティ)</span>
-                                            <IconExternalLink className="text-stone-400 group-hover:text-[#D9333F]" />
-                                        </a>
                                     </div>
                                 </div>
                             </div>
@@ -350,7 +395,7 @@
                             <div className="mt-4">
                                 <h4 className="font-bold text-lg text-stone-700">年賀状を作成！</h4>
                                 <p className="text-sm text-stone-500 mt-2">
-                                    「スマートお年賀を作る」を押して、あなた好みの年賀状を作成！<br/>
+                                    「デジタル年賀状を作る」を押して、あなた好みの年賀状を作成！<br/>
                                     テンプレートを選んで、写真やメッセージを入れよう。
                                 </p>
                             </div>
@@ -375,7 +420,7 @@
                             style={{ backgroundColor: mainColor }}
                         >
                             <IconMagic size={28} />
-                            スマートお年賀を作る
+                            デジタル年賀状を作る
                         </button>
                     </div>
                 </div>
@@ -688,7 +733,7 @@
                     try {
                         await navigator.share({
                             files: [file],
-                            title: 'スマートお年賀',
+                            title: 'スマホde年賀！',
                             text: 'あけましておめでとうございます！', 
                         });
                     } catch (error) {
@@ -803,7 +848,7 @@
                         <div className="max-w-6xl mx-auto flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <div className="p-2 rounded-lg text-white" style={{ backgroundColor: selectedTemplate.mainColor }}><IconGift size={20} /></div>
-                                <h1 className="text-xl font-bold tracking-wide text-stone-700 font-mincho">スマートお年賀</h1>
+                                <h1 className="text-xl font-bold tracking-wide text-stone-700 font-mincho">スマホde年賀！</h1>
                             </div>
                         </div>
                     </header>
@@ -905,7 +950,7 @@
                                 {isProcessing ? <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> : <IconMagic size={24} />}
                                 <span>{isProcessing ? 'デジタル年賀状を作成' : 'デジタル年賀状を作成'}</span>
                             </button>
-                            <button onClick={handlePrint} className="inline-flex items-center gap-2 px-6 py-4 rounded-full font-bold text-stone-600 bg-white border border-stone-200 text-lg transition-transform hover:bg-stone-50 active:scale-95 shadow-sm hover:text-[#D9333F]"><IconPrinter size={20} /> <span>印刷画面へ</span></button>
+                            
                         </div>
                     </div>
                 </div>
