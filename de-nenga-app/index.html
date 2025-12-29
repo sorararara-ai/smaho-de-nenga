@@ -740,9 +740,9 @@
                 const file = new File([generatedBlob], fileName, { type: "image/png" });
                 
                 // 修正: ギフトURLをシェアテキストに追加
-                let shareText = 'あけましておめでとうございます！\n今年もよろしくお願いします。';
+                let shareText = 'あけましておめでとうございます！\n今年もよろしくお願いします！';
                 if (giftUrl) {
-                    shareText += `\n\n心ばかりのギフトを贈ります🎁\n受け取ってください👇\n${giftUrl}`;
+                    shareText += `\n\nデジタル年賀状と、心ばかりのギフトを贈ります🎁\n${giftUrl}`;
                 }
 
                 if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
