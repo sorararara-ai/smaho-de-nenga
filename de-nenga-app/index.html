@@ -738,12 +738,20 @@
                 if (!generatedBlob) return;
                 const fileName = `nengajo_2026_${Date.now()}.png`;
                 const file = new File([generatedBlob], fileName, { type: "image/png" });
+                
+                // 修正: ギフトURLをシェアテキストに追加
+                let shareText = 'あけましておめでとうございます！\n今年もよろしくお願いします。';
+                if (giftUrl) {
+                    shareText += `\n\n心ばかりのギフトを贈ります🎁\n受け取ってください👇\n${giftUrl}`;
+                }
+
                 if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
                     try {
                         await navigator.share({
                             files: [file],
-                            title: 'スマホde年賀！',
-                            text: 'あけましておめでとうございます！', 
+                            title: 'スマートお年賀',
+                            text: shareText, // 修正
+                            // url: giftUrl // urlプロパティは環境によって挙動が異なるためtextに含めるのが安全
                         });
                     } catch (error) {
                         if (error.name !== 'AbortError') {
