@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>スマホde年賀！</title>
+    
+    <!-- LINEなどでシェアした時の設定 (OGP) -->
+    <meta property="og:title" content="スマホde年賀！" />
+    <meta property="og:description" content="写真とメッセージを入れて、デジタル年賀状を作ろう！" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://roasted-lime-5tjzeefbi6-nf9e8x0i6h.edgeone.dev/sample2のコピー.jpg" />
+    
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
+    <!-- Babel (for JSX) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- html2canvas (For Image Download) -->
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&family=Zen+Old+Mincho:wght@400;700;900&family=Hina+Mincho&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Zen Maru Gothic', sans-serif;
+            background-color: #f5f5f4;
+            color: #292524;
+            overflow-x: hidden;
+            width: 100%;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        .font-mincho { font-family: 'Zen Old Mincho', serif; }
+        .font-hina { font-family: 'Hina Mincho', serif; }
+        .font-maru { font-family: 'Zen Maru Gothic', sans-serif; }
+
+        /* --- 背景パターン --- */
+        /* JS側でインラインスタイルとして定義するため、CSSクラスは削除 */
+        
+        /* 縦書き設定 */
+        .vertical-text {
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+            letter-spacing: 0.05em;
+        }
+
+        /* 印刷設定: はがきサイズ 100mm x 148mm */
+        @media print {
+            @page {
+                size: 100mm 148mm;
+                margin: 0;
+            }
+            body {
+                margin: 0;
+                padding: 0;
+                background: white;
+                height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            body * {
+                visibility: hidden;
+            }
+            
+            /* 印刷用コンテナを表示 */
+            #hidden-print-target, #hidden-print-target * {
+                visibility: visible;
+                opacity: 1 !important;
+            }
+            
+            #hidden-print-target {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100mm;
+                height: 148mm;
+                z-index: 9999;
+                margin: 0;
+                padding: 0;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+        }
+        
+        /* Custom Selection Color */
+        ::selection {
+            background-color: #D9333F;
+            color: white;
+        }
+
+        /* Animation */
+        @keyframes fade-in-up {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .animate-fade-in-up {
+            animation: fade-in-up 0.6s ease-out forwards;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useRef, useMemo, useEffect } = React;
+
+        // --- Constants ---
+        const CARD_WIDTH = 378;
+        const CARD_HEIGHT = 559;
+
+        // --- Helper: 市松模様のスタイルを生成する関数 ---
+        // html2canvasで最も安定して出力される linear-gradient を使用
+        const getCheckeredPatternStyle = (color) => {
+            return {
+                backgroundColor: '#ffffff',
+                backgroundImage: `
+                    linear-gradient(45deg, ${color} 25%, transparent 25%), 
+                    linear-gradient(-45deg, ${color} 25%, transparent 25%), 
+                    linear-gradient(45deg, transparent 75%, ${color} 75%), 
+                    linear-gradient(-45deg, transparent 75%, ${color} 75%)
+                `,
+                backgroundSize: '20px 20px',
+                backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px'
+            };
+        };
+
+        // --- Templates Data ---
+        // すべて市松模様(Checkered)に統一し、色のみ変更
+        const TEMPLATES = [
+            {
+                id: 'trad-red',
+                name: '伝統 (赤)',
+                mainColor: '#D9333F', // Japanese Red
+                patternStyle: getCheckeredPatternStyle('#ffe4e6'), // 薄い赤の市松模様
+                fontHeading: 'font-hina',
+                fontBody: 'font-mincho',
+                decorType: 'horse-trad'
+            },
+            {
+                id: 'mod-blue',
+                name: 'モダン (青)',
+                mainColor: '#0369a1', // Sky Blue 700
+                patternStyle: getCheckeredPatternStyle('#e0f2fe'), // 薄い青の市松模様
+                fontHeading: 'font-maru',
+                fontBody: 'font-maru',
+                decorType: 'horse-mod'
+            },
+            {
+                id: 'pop-yellow',
+                name: 'ポップ (黄)',
+                mainColor: '#b45309', // Amber 700
+                patternStyle: getCheckeredPatternStyle('#fef3c7'), // 薄い黄色の市松模様
+                fontHeading: 'font-maru',
+                fontBody: 'font-mincho',
+                decorType: 'horse-pop'
+            }
+        ];
+
+        // --- Icons (Simple SVG Components) ---
+        const IconGift = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.9 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/></svg>
+        );
+        const IconQrCode = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/></svg>
+        );
+        const IconUser = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        );
+        const IconType = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" x2="15" y1="20" y2="20"/><line x1="12" x2="12" y1="4" y2="20"/></svg>
+        );
+        const IconShare = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
+        );
+        const IconCopy = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+        );
+        const IconSparkles = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M9 3v4"/><path d="M3 9h4"/></svg>
+        );
+        const IconImage = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+        );
+        const IconTrash = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+        );
+        const IconPrinter = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+        );
+        const IconX = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        );
+        const IconHand = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
+        );
+        const IconMagic = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg>
+        );
+        const IconPalette = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+        );
+        const IconExternalLink = ({ size = 16, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/></svg>
+        );
+        const IconCheckCircle = ({ size = 20, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        );
+
+
+        // --- Decoration Components (Horse Themed) ---
+        const DecorHorseTrad = ({ color }) => (
+            <svg viewBox="0 0 24 24" className="w-full h-full" fill={color}>
+                <path d="M20,7c-1-1-2.5-1.5-4-1c-0.5-0.5-1-1-2-1c-1,0-2,0.5-2.5,1.5c-1,0-2,0.5-2.5,1.5c-0.5,1-0.5,2,0,3c-0.5,0.5-1,1.5-1,2.5c0,1,0.5,2,1.5,2.5c0.5,0.5,1.5,0.5,2.5,0c0.5-0.5,1-1,1-2c0-0.5-0.5-1-1-1.5c0.5-0.5,1.5-1,2.5-1c1,0,2-0.5,2.5-1.5c0.5-1,0-2-0.5-2.5c0.5-0.5,1.5-0.5,2.5,0.5c1,1,1.5,2.5,1,4c-0.5,1.5-2,2.5-3.5,2.5c-1,0-2-0.5-2.5-1.5c-0.5-1-0.5-2,0-3" />
+                <circle cx="18" cy="18" r="3" opacity="0.3" />
+            </svg>
+        );
+        const DecorHorseMod = ({ color }) => (
+            <svg viewBox="0 0 24 24" className="w-full h-full" fill={color}>
+                <path d="M19 22H5v-2h14v2zm-2-4H7V4l5-2l5 3v2h-2v2h2v9zM9 6h2v2H9V6zm0 3h2v2H9V9z"/>
+            </svg>
+        );
+        const DecorHorsePop = ({ color }) => (
+            <svg viewBox="0 0 24 24" className="w-full h-full" fill={color}>
+                <path d="M17,17c2-2,2-5,0-7l-1-1c-2-2-5-2-7,0l-1,1c-2,2-2,5,0,7c0.5,0.5,1,1,2,1c1,0,2-0.5,2.5-1.5c0.5-1,0-2-0.5-2.5c-0.5-0.5-1-0.5-1.5-0.5c-0.5,0-1,0-1,0.5c-0.5,0.5-0.5,1.5,0,2c0.5,0.5,1.5,0.5,2,0c0.5-0.5,1-1.5,1-2.5c0-1-0.5-2-1.5-2.5c-1-0.5-2-0.5-2.5,0.5c-0.5,1-0.5,2,0,3c0.5,0.5,1.5,0.5,2.5,0" />
+                <path d="M12,8 c-1,-1 -2,-1 -3,0 c-1,1 -1,2 0,3 l3,3 l3,-3 c1,-1 1,-2 0,-3 c-1,-1 -2,-1 -3,0" fill="#FFF" opacity="0.8" />
+            </svg>
+        );
+        const UmeFlower = ({ className, color }) => (
+            <svg viewBox="0 0 24 24" className={className} fill={color}>
+                <path d="M12,2 C13.5,2 14.8,3 15.5,4.2 C16.2,3 17.5,2 19,2 C21.2,2 23,3.8 23,6 C23,7.5 22,8.8 20.8,9.5 C22,10.2 23,11.5 23,13 C23,15.2 21.2,17 19,17 C17.5,17 16.2,16 15.5,14.8 C14.8,16 13.5,17 12,17 C9.8,17 8,15.2 8,13 C8,11.5 9,10.2 10.2,9.5 C9,8.8 8,7.5 8,6 C8,3.8 9.8,2 12,2 Z" />
+                <circle cx="12" cy="9.5" r="1.5" fill="#FFF5E1" />
+            </svg>
+        );
+
+        // --- Landing Page Component ---
+        const LandingPage = ({ onStart, mainColor }) => {
+            return (
+                <div className="max-w-4xl mx-auto p-4 animate-fade-in-up space-y-8 pb-12">
+                    <div className="bg-white p-8 rounded-3xl shadow-sm border border-stone-100 text-center space-y-4">
+                        
+                        {/* キャッチコピーエリア */}
+                        <div className="mb-6 bg-stone-50 p-4 rounded-xl border border-stone-200/50">
+                            <p className="font-bold text-stone-600 text-sm md:text-base leading-loose">
+                                「年賀状を出したかったのに、<br/>
+                                もう間に合わない...」<br/>
+                                そんな時は、<br/>
+                                <span className="text-xl font-bold" style={{color: mainColor}}>「スマホde年賀！」</span>
+                            </p>
+                        </div>
+                        
+                        {/* Image Inserted Here */}
+                        <div className="mb-6 flex justify-center">
+                            <img 
+                                src="./sample2.jpg" 
+                                className="max-w-[80%] md:max-w-[280px] h-auto object-contain shadow-lg rounded-lg transform rotate-2"
+                                onError={(e) => {
+                                    e.target.style.display = 'none'; // 万が一画像がない場合は非表示に
+                                }}
+                            />
+                        </div>
+                        
+                        {/* サービス説明 */}
+                        <h2 className="text-2xl md:text-3xl font-bold text-stone-700 font-mincho">スマホde年賀！とは？</h2>
+                        <p className="text-black font-medium leading-relaxed">
+                            スマホde年賀！は、年賀状代わりにLINEやSNSで送れる、<br className="hidden md:block"/><u>ギフト付きデジタル年賀状</u>です。
+                        </p>
+                        {/* ビジュアル説明：アイコンとステップ図 */}
+                            <div className="text-left bg-stone-50 p-5 md:p-6 rounded-2xl space-y-4 mt-6 border border-stone-100">
+                                <h3 className="font-bold text-stone-700 mb-6 flex items-center justify-center gap-2">
+                                    <IconSparkles className="text-yellow-500" /> 
+                                    3ステップで簡単！
+                                </h3>
+                                
+                                <div className="flex items-start justify-between relative">
+                                    <div className="absolute top-6 left-12 right-12 h-0.5 bg-stone-300 -z-10 hidden md:block"></div>
+                                    
+                                    <div className="flex flex-col items-center gap-2 flex-1">
+                                        <div className="w-12 h-12 bg-white border-2 border-yellow-500 rounded-full flex items-center justify-center text-yellow-500 shadow-sm z-10">
+                                            <IconGift size={24} />
+                                        </div>
+                                        <div className="text-center">
+                                            <span className="block text-sm font-bold text-stone-700">ギフト選択</span>
+                                            <span className="block text-[10px] text-stone-500">URLを<br/>貼るだけ</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="self-center pt-3 text-stone-300 md:hidden">▶</div>
+
+                                    <div className="flex flex-col items-center gap-2 flex-1">
+                                        <div className="w-12 h-12 bg-white border-2 border-[#D9333F] rounded-full flex items-center justify-center text-[#D9333F] shadow-sm z-10">
+                                            <IconMagic size={24} />
+                                        </div>
+                                        <div className="text-center">
+                                            <span className="block text-sm font-bold text-stone-700">年賀状作成</span>
+                                            <span className="block text-[10px] text-stone-500">好きなデザイン!<br/>デジタル完結!</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="self-center pt-3 text-stone-300 md:hidden">▶</div>
+
+                                    <div className="flex flex-col items-center gap-2 flex-1">
+                                        <div className="w-12 h-12 bg-white border-2 border-green-500 rounded-full flex items-center justify-center text-green-500 shadow-sm z-10">
+                                            <IconShare size={24} />
+                                        </div>
+                                        <div className="text-center">
+                                            <span className="block text-sm font-bold text-stone-700">SNS送信</span>
+                                            <span className="block text-[10px] text-stone-500">LINE等で送る</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        {/* 特徴リスト */}
+                        <div className="text-left bg-stone-50 p-5 md:p-6 rounded-2xl space-y-4 mt-6 border border-stone-100">
+                            <div className="flex items-start gap-3">
+                                <div className="text-[#D9333F] shrink-0 mt-0.5">
+                                    <IconCheckCircle size={20} />
+                                </div>
+                                <p className="font-bold text-stone-700 text-sm md:text-base">最短3分で完成！</p>
+                            </div>
+                            <div className="flex items-start gap-3">
+                                <div className="text-[#D9333F] shrink-0 mt-0.5">
+                                    <IconCheckCircle size={20} />
+                                </div>
+                                <p className="font-bold text-stone-700 text-sm md:text-base">ハガキ代、印刷代、郵送代が0円！</p>
+                            </div>
+                            <div className="flex items-start gap-3">
+                                <div className="text-[#D9333F] shrink-0 mt-0.5">
+                                    <IconCheckCircle size={20} />
+                                </div>
+                                <div>
+                                    <p className="font-bold text-stone-700 text-sm md:text-base">ギフトを添えて、「ありがとう」や「よろしく」を伝えられる！</p>
+                                    <p className="text-xs text-stone-500 mt-1 leading-relaxed">※従来、ハガキの年賀状1枚あたり200円ほどかかっていた代金を、お相手へのギフトに使えます。</p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div className="space-y-6">
+                        <h3 className="text-xl font-bold text-center text-stone-600 flex items-center justify-center gap-2">
+                            <IconSparkles className="text-[#D9333F]" /> 使い方はカンタン！
+                        </h3>
+
+                        {/* STEP 1 */}
+                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-100 relative overflow-hidden">
+                            <div className="absolute top-0 left-0 bg-[#D9333F] text-white px-4 py-1 rounded-br-xl text-sm font-bold">STEP 1</div>
+                            <div className="mt-4 md:flex md:items-start md:gap-6">
+                                <div className="flex-1 space-y-3">
+                                    <h4 className="font-bold text-lg text-stone-700">贈りたいギフトを選ぶ！</h4>
+                                    <p className="text-sm text-stone-500">
+                                        選んだギフトを購入し、ギフトのURLをコピーしておいてね！
+                                    </p>
+                                    <div className="bg-stone-50 p-4 rounded-xl space-y-3 mt-3">
+                                        <p className="text-xs font-bold text-stone-500">オススメのデジタルギフト購入サイト</p>
+                            
+
+                                        <a href="https://giftee.com/?srsltid=AfmBOopn__piridn-qPv4jq6n-VFdZDwuXC45jVmM_Xb42Dz-q4-XUSY" target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 bg-white rounded-lg border border-stone-200 hover:border-[#D9333F] transition-colors group">
+                                            <span className="font-bold text-stone-700 group-hover:text-[#D9333F] transition-colors">giftee (ギフティ)</span>
+                                            <IconExternalLink className="text-stone-400 group-hover:text-[#D9333F]" />
+                                        </a>
+
+                                        <a href="https://linegift.line.me/about/" target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 bg-white rounded-lg border border-stone-200 hover:border-[#D9333F] transition-colors group">
+                                            <div>
+                                                <span className="font-bold text-stone-700 group-hover:text-[#D9333F] transition-colors">LINEギフト</span>
+                                                <p className="text-[10px] text-stone-400 mt-1">※「自分用に購入」を選択してね！</p>
+                                            </div>
+                                            <IconExternalLink className="text-stone-400 group-hover:text-[#D9333F]" />
+                                        </a>
+
+                                    </div>
+                                    <p className="text-sm text-stone-500">
+                                        <u>※デジタルギフト無しでも年賀状を送れます。</u>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* STEP 2 */}
+                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-100 relative overflow-hidden">
+                            <div className="absolute top-0 left-0 bg-[#D9333F] text-white px-4 py-1 rounded-br-xl text-sm font-bold">STEP 2</div>
+                            <div className="mt-4">
+                                <h4 className="font-bold text-lg text-stone-700">年賀状を作成！</h4>
+                                <p className="text-sm text-stone-500 mt-2">
+                                    「デジタル年賀状を作る」を押して、あなた好みの年賀状を作成！<br/>
+                                    テンプレートを選んで、写真やメッセージを入れよう。
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* STEP 3 */}
+                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-100 relative overflow-hidden">
+                            <div className="absolute top-0 left-0 bg-[#D9333F] text-white px-4 py-1 rounded-br-xl text-sm font-bold">STEP 3</div>
+                            <div className="mt-4">
+                                <h4 className="font-bold text-lg text-stone-700">SNSで送る！</h4>
+                                <p className="text-sm text-stone-500 mt-2">
+                                    作成ボタンで画像を生成して、LINEやSNSで友達に送ろう！
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="text-center pt-4">
+                        <button 
+                            onClick={onStart}
+                            className="inline-flex items-center gap-3 px-12 py-5 rounded-full font-bold text-white text-xl transition-transform hover:scale-105 active:scale-95 shadow-xl hover:shadow-2xl animate-bounce"
+                            style={{ backgroundColor: mainColor }}
+                        >
+                            <IconMagic size={28} />
+                            デジタル年賀状を作る
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- Nengajo Card Component (Shared for Preview and Capture) ---
+        const NengajoCard = ({ 
+            recipientName, 
+            message, 
+            giftUrl, 
+            backgroundImage, 
+            messageStyle, 
+            template, // Selected Template Object
+            imageScale,
+            imagePos,
+            onDragStart,
+            onDragMove,
+            onDragEnd,
+            onWheel,
+            isDragging,
+            isCapture = false,
+            isLandscape = false
+        }) => {
+            return (
+                <div 
+                    className="shadow-2xl overflow-hidden relative flex flex-col mx-auto transition-all"
+                    style={{ 
+                        width: `${CARD_WIDTH}px`, 
+                        height: `${CARD_HEIGHT}px`,
+                        // 固定サイズ設定 (html2canvas対策)
+                        minWidth: `${CARD_WIDTH}px`,
+                        maxWidth: `${CARD_WIDTH}px`,
+                        minHeight: `${CARD_HEIGHT}px`,
+                        maxHeight: `${CARD_HEIGHT}px`,
+                        boxSizing: 'border-box'
+                    }} 
+                >
+                    {/* --- Background Layer (Applied via Inline Style for html2canvas compatibility) --- */}
+                    <div 
+                        style={{
+                            position: 'absolute',
+                            inset: 0,
+                            zIndex: 0,
+                            pointerEvents: 'none',
+                            ...template.patternStyle // Inject pattern style directly
+                        }}
+                    ></div>
+                    <div className="absolute inset-0 border-[10px] border-white z-10 pointer-events-none"></div>
+
+                    {/* --- Content Container --- */}
+                    <div className="relative z-10 flex flex-col h-full p-6">
+                        
+                        {/* Top Section: Header & Stamp */}
+                        <div className="flex justify-between items-start mb-2 pointer-events-none">
+                            <div className="flex flex-col gap-1">
+                                <h2 className={`text-4xl ${template.fontHeading} leading-none`} style={{ writingMode: 'horizontal-tb', color: template.mainColor }}>
+                                    謹賀新年
+                                </h2>
+                                <p className={`text-lg font-bold tracking-[0.2em] ml-1 mb-0 leading-none ${template.fontHeading}`} style={{ color: template.mainColor }}>Happy New Year</p>
+                                <p className={`text-lg font-bold tracking-[0.2em] ml-1 mb-0 leading-none ${template.fontHeading}`} style={{ color: template.mainColor }}>2026</p>
+                                {/* Recipient Name */}
+                                {recipientName && (
+                                    <div 
+                                        className={`mt-1 ${template.fontBody} text-lg tracking-normal ml-1 mb-0 leading-none inline-block self-start pb-1`} 
+                                        style={{ color: '#292524'}}
+                                    >
+                                        {recipientName}
+                                    </div>
+                                )}
+                            </div>
+                            {/* Postage Stamp Area */}
+                            <div className="flex flex-col items-center justify-center p-1 mr-6">
+                                <img 
+                                    src="sample3.jpg" 
+                                    alt="2026" 
+                                    className="w-20 h-20 object-contain"
+                                    onError={(e) => {
+                                        // 画像がない場合のフォールバック（元のテキストを表示）
+                                        e.target.style.display = 'none';
+                                        e.target.parentElement.innerHTML = `<span class="text-4xl font-bold tracking-widest leading-none" style="color: ${template.mainColor}; text-shadow: 1px 1px 0 #fff;">2026</span><span class="text-lg font-bold tracking-widest leading-none mt-1" style="color: ${template.mainColor};">年</span>`;
+                                    }}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Main Content Area - Fixed Layout */}
+                        <div className="flex-grow relative w-full">
+                            
+                            {/* Photo Area */}
+                            <div className="w-full h-56 mb-4 relative z-20 overflow-hidden rounded-sm border-4 border-white shadow-md bg-stone-100 touch-none"
+                                 onMouseDown={!isCapture ? onDragStart : undefined}
+                                 onTouchStart={!isCapture ? onDragStart : undefined}
+                                 onMouseMove={!isCapture ? onDragMove : undefined}
+                                 onTouchMove={!isCapture ? onDragMove : undefined}
+                                 onMouseUp={!isCapture ? onDragEnd : undefined}
+                                 onMouseLeave={!isCapture ? onDragEnd : undefined}
+                                 onTouchEnd={!isCapture ? onDragEnd : undefined}
+                                 onWheel={!isCapture ? onWheel : undefined}
+                                 style={{ cursor: (!isCapture && isDragging) ? 'grabbing' : (!isCapture ? 'grab' : 'default') }}
+                            >
+                                {backgroundImage ? (
+                                    <>
+                                        <div className="w-full h-full flex items-center justify-center pointer-events-none select-none"
+                                             style={{
+                                                transform: `translate(${imagePos.x}px, ${imagePos.y}px) scale(${imageScale})`,
+                                             }}
+                                        >
+                                            <img 
+                                                src={backgroundImage} 
+                                                alt="User" 
+                                                className={`pointer-events-none select-none max-w-none max-h-none ${isLandscape ? 'h-full w-auto' : 'w-full h-auto'}`}
+                                            />
+                                        </div>
+                                        
+                                        {!isCapture && (
+                                            <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300 bg-black/10 no-capture">
+                                                <div className="bg-black/60 text-white text-[10px] px-2 py-1 rounded backdrop-blur-sm">
+                                                    ドラッグで移動 / ピンチで拡大
+                                                </div>
+                                            </div>
+                                        )}
+                                    </>
+                                ) : (
+                                    <div className="w-full h-full border-2 border-dashed border-stone-300 rounded flex items-center justify-center bg-white/50">
+                                        <IconImage size={32} className="text-stone-300" />
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* 修正箇所: giftUrlの有無でレイアウトクラスを切り替え */}
+                            <div className={`absolute top-60 bottom-5 pt-2 overflow-hidden pointer-events-none ${giftUrl ? 'left-[9.5rem] right-2 text-left' : 'left-6 right-6 text-center'}`}>
+                                <div className={`text-stone-800 whitespace-pre-wrap ${template.fontBody} ${messageStyle}`}>
+                                    {message || "ここにメッセージが入ります"}
+                                </div>
+                            </div>
+
+                            {/* QR Code Area */}
+                            {/* 修正箇所: giftUrlがない場合はエリアごと非表示にする */}
+                            {giftUrl && (
+                                <div className="absolute top-60 left-0 w-32 pt-2 flex flex-col justify-start items-center -ml-1 pointer-events-none">
+                                    <div className="relative">
+                                        <div className="flex flex-col items-center">
+                                            <p className="text-[10px] mb-2 font-bold tracking-tighter" style={{ color: template.mainColor }}>新年のギフトを受取る</p>
+                                            <div className="bg-white p-2 border border-stone-200 shadow-sm relative">
+                                                <div className="absolute -top-1 -left-1 w-2 h-2 border-t border-l" style={{ borderColor: template.mainColor }}></div>
+                                                <div className="absolute -top-1 -right-1 w-2 h-2 border-t border-r" style={{ borderColor: template.mainColor }}></div>
+                                                <div className="absolute -bottom-1 -left-1 w-2 h-2 border-b border-l" style={{ borderColor: template.mainColor }}></div>
+                                                <div className="absolute -bottom-1 -right-1 w-2 h-2 border-b border-r" style={{ borderColor: template.mainColor }}></div>
+                                                <img 
+                                                    src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(giftUrl)}&color=${template.mainColor.replace('#', '')}&bgcolor=ffffff&margin=0`}
+                                                    alt="Gift QR"
+                                                    className="w-20 h-20"
+                                                />
+                                            </div>
+                                            <p className="text-[7px] text-stone-500 mt-2 text-center leading-tight">
+                                                QRコードをタップするか、<br/>カメラで読み込むことで<br/>ギフトが受け取れます。
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="mt-4 w-10 h-10 opacity-80">
+                                        {template.decorType === 'horse-mod' ? <DecorHorseMod color={template.mainColor} /> : 
+                                         template.decorType === 'horse-pop' ? <DecorHorsePop color={template.mainColor} /> :
+                                         <DecorHorseTrad color={template.mainColor} />}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="absolute bottom-[-10px] left-[-10px] w-24 h-24 opacity-10 pointer-events-none">
+                            {template.decorType === 'horse-mod' ? <DecorHorseMod color={template.mainColor} /> : 
+                             template.decorType === 'horse-pop' ? <DecorHorsePop color={template.mainColor} /> :
+                             <DecorHorseTrad color={template.mainColor} />}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- Main Application ---
+        function App() {
+            const [showGenerator, setShowGenerator] = useState(false);
+            const [giftUrl, setGiftUrl] = useState('');
+            const [recipientName, setRecipientName] = useState('');
+            // 修正: 初期メッセージの空行を削除
+            const [message, setMessage] = useState('謹んで新春の\nお慶びを申し上げます\n旧年中は大変お世話に\nなりました\n本年もどうぞよろしく\nお願いいたします');
+            // 修正: 初期状態で sample4.png をセットする
+            const [backgroundImage, setBackgroundImage] = useState('sample4.jpg');
+            const [showConfetti, setShowConfetti] = useState(false);
+            const [isProcessing, setIsProcessing] = useState(false);
+            const [generatedImage, setGeneratedImage] = useState(null); 
+            const [generatedBlob, setGeneratedBlob] = useState(null); 
+            const [selectedTemplate, setSelectedTemplate] = useState(TEMPLATES[0]);
+            const [imageScale, setImageScale] = useState(1);
+            const [imagePos, setImagePos] = useState({ x: 0, y: 0 });
+            const [isDragging, setIsDragging] = useState(false);
+            const dragStart = useRef({ x: 0, y: 0 });
+            const pinchStartDist = useRef(null);
+            const startScale = useRef(1);
+            const fileInputRef = useRef(null);
+            const [isLandscape, setIsLandscape] = useState(false);
+
+            // パフォーマンス改善のためのRef
+            const processingRef = useRef(false);
+
+            // 修正: デフォルト画像かどうかを判定 (sample4.png)
+            const isDefaultImage = backgroundImage === 'sample4.jpg';
+
+            // Calculate font size based on message length
+            const messageStyle = useMemo(() => {
+                const len = message.length;
+                // 100文字までは確実に収まるように、文字数に応じて細かくサイズを調整
+                if (len <= 30) return "text-sm leading-[1.8] tracking-widest"; 
+                if (len <= 50) return "text-xs leading-[1.6] tracking-wider";
+                if (len <= 70) return "text-[11px] leading-[1.5] tracking-wide";
+                if (len <= 90) return "text-[10px] leading-[1.4] tracking-normal";
+                return "text-[9px] leading-[1.2] tracking-tight"; // 91〜100文字
+            }, [message]);
+
+            // 修正: 初期画像の比率判定 (sample4.png)
+            useEffect(() => {
+                const img = new Image();
+                img.onload = () => {
+                    const aspect = img.width / img.height;
+                    setIsLandscape(aspect > (CARD_WIDTH / CARD_HEIGHT));
+                };
+                img.src = 'sample4.';
+            }, []);
+
+            // --- Handlers ---
+            // 修正: 改行連打による空行、および行頭の空行を禁止する
+            const handleMessageChange = (e) => {
+                let val = e.target.value;
+                // 行頭の改行を削除（冒頭の空行を防ぐ）
+                val = val.replace(/^\n+/, '');
+                // 連続する改行を1つの改行に強制置換（空行を作らせない）
+                // 正規表現の意味: \n{2,} は「改行が2回以上続く」ことを意味し、それを単一の \n に置換
+                val = val.replace(/\n{2,}/g, '\n'); 
+                setMessage(val);
+            };
+
+            const handleDragStart = (e) => {
+                if (!backgroundImage) return;
+                if (e.type === 'touchstart' && e.touches.length === 2) {
+                    e.preventDefault();
+                    const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+                    pinchStartDist.current = dist;
+                    startScale.current = imageScale;
+                    return;
+                }
+                setIsDragging(true);
+                const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+                const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+                dragStart.current = { x: clientX - imagePos.x, y: clientY - imagePos.y };
+            };
+
+            // 修正: パフォーマンス最適化版のhandleDragMove
+            const handleDragMove = (e) => {
+                if (!backgroundImage) return;
+                
+                const isPinch = e.type === 'touchmove' && e.touches.length === 2 && pinchStartDist.current !== null;
+                
+                if (!isDragging && !isPinch) return;
+
+                if (e.cancelable) e.preventDefault();
+
+                if (processingRef.current) return;
+                processingRef.current = true;
+
+                let dist = 0;
+                let clientX = 0;
+                let clientY = 0;
+
+                if (isPinch) {
+                    dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+                } else {
+                    clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+                    clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+                }
+
+                requestAnimationFrame(() => {
+                    if (isPinch) {
+                        const newScale = startScale.current * (dist / pinchStartDist.current);
+                        setImageScale(Math.min(Math.max(0.5, newScale), 3)); 
+                    } else {
+                        setImagePos({ x: clientX - dragStart.current.x, y: clientY - dragStart.current.y });
+                    }
+                    processingRef.current = false;
+                });
+            };
+
+            const handleDragEnd = () => { setIsDragging(false); pinchStartDist.current = null; };
+
+            // 修正: パフォーマンス最適化版のhandleWheel
+            const handleWheel = (e) => {
+                if (!backgroundImage) return;
+                if (e.cancelable) e.preventDefault();
+
+                if (processingRef.current) return;
+                processingRef.current = true;
+
+                const deltaY = e.deltaY;
+
+                requestAnimationFrame(() => {
+                    const delta = deltaY * -0.001;
+                    const newScale = Math.min(Math.max(0.5, imageScale + delta), 3);
+                    setImageScale(newScale);
+                    processingRef.current = false;
+                });
+            };
+
+            const handleStart = () => {
+                if (generatorRef.current) {
+                    generatorRef.current.scrollIntoView({ behavior: 'smooth' });
+                }
+                setShowGenerator(true); 
+            };
+
+            const generatorRef = useRef(null);
+
+            const handleCreateImage = async () => {
+                setIsProcessing(true);
+                await document.fonts.ready;
+                const element = document.getElementById('capture-target');
+                if (!element) return;
+                try {
+                    // 重要: 固定サイズキャプチャ設定 + 背景色なし(透過OK)だがインラインスタイルで背景を描画
+                    const canvas = await html2canvas(element, {
+                        scale: 3, 
+                        useCORS: true, 
+                        backgroundColor: null,
+                        width: CARD_WIDTH, 
+                        height: CARD_HEIGHT, 
+                        windowWidth: 1600, // PCサイズ偽装
+                        windowHeight: 1200,
+                        scrollX: 0, 
+                        scrollY: 0,
+                        onclone: (clonedDoc) => {
+                            const target = clonedDoc.getElementById('capture-target');
+                            if (target) {
+                                target.style.display = 'block'; 
+                                target.style.visibility = 'visible'; 
+                                target.style.opacity = '1'; 
+                                target.style.transform = 'none';
+                                target.style.width = `${CARD_WIDTH}px`;
+                                target.style.height = `${CARD_HEIGHT}px`;
+                            }
+                        }
+                    });
+                    const dataUrl = canvas.toDataURL("image/png");
+                    setGeneratedImage(dataUrl);
+                    canvas.toBlob((blob) => { setGeneratedBlob(blob); setIsProcessing(false); }, 'image/png');
+                } catch (error) {
+                    console.error("Generation failed:", error);
+                    alert("エラーが発生しました。");
+                    setIsProcessing(false);
+                }
+            };
+
+            const handleShare = async () => {
+                if (!generatedBlob) return;
+                const fileName = `nengajo_2026_${Date.now()}.png`;
+                const file = new File([generatedBlob], fileName, { type: "image/png" });
+                
+                // 修正: ギフトURLをシェアテキストに追加
+                let shareText = 'あけましておめでとうございます！\n今年もよろしくお願いします！';
+                if (giftUrl) {
+                    shareText += `\n\nデジタル年賀状と、心ばかりのギフトを贈ります🎁\n${giftUrl}`;
+                }
+
+                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            files: [file],
+                            title: 'ギフトde年賀！',
+                            text: shareText, // 修正
+                            // url: giftUrl // urlプロパティは環境によって挙動が異なるためtextに含めるのが安全
+                        });
+                    } catch (error) {
+                        if (error.name !== 'AbortError') {
+                            console.error('Share failed:', error);
+                            alert("シェアに失敗しました。画像を長押しして保存してください。");
+                        }
+                    }
+                } else {
+                    alert("お使いの環境では直接シェアできません。画像を長押しして保存してください。");
+                }
+            };
+
+            const handlePrint = () => window.print();
+            const handleCopyUrl = () => {
+                if (!giftUrl) return;
+                const tempInput = document.createElement("input");
+                tempInput.value = giftUrl;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand("copy");
+                document.body.removeChild(tempInput);
+                setShowConfetti(true);
+                setTimeout(() => setShowConfetti(false), 2000);
+            };
+            const handleImageUpload = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => { 
+                        const result = e.target.result;
+                        setBackgroundImage(result); 
+                        setImageScale(1); 
+                        setImagePos({ x: 0, y: 0 });
+                        const img = new Image();
+                        img.onload = () => {
+                            const aspect = img.width / img.height;
+                            setIsLandscape(aspect > 1.47);
+                        };
+                        img.src = result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+            // 修正: 画像削除時は sample4.jpg に戻す
+            const clearImage = () => {
+                setBackgroundImage('sample4.jpg');
+                if (fileInputRef.current) fileInputRef.current.value = '';
+                setImageScale(1); setImagePos({ x: 0, y: 0 });
+                // sample4.jpg の比率再設定（縦長なのでfalse）
+                setIsLandscape(false);
+            };
+
+            // --- Responsive Preview Scaler ---
+            const ResponsivePreview = ({ children }) => {
+                const containerRef = useRef(null);
+                const [scale, setScale] = useState(1);
+                useEffect(() => {
+                    const updateScale = () => {
+                        if (containerRef.current) {
+                            const parentWidth = containerRef.current.parentElement.offsetWidth;
+                            const newScale = Math.min(1, (parentWidth / CARD_WIDTH) * 0.95);
+                            setScale(newScale);
+                        }
+                    };
+                    updateScale();
+                    window.addEventListener('resize', updateScale);
+                    return () => window.removeEventListener('resize', updateScale);
+                }, []);
+                return (
+                    <div ref={containerRef} className="flex justify-center items-start overflow-hidden" style={{ width: '100%', height: `${CARD_HEIGHT * scale}px`, position: 'relative' }}>
+                        <div style={{ transform: `scale(${scale})`, transformOrigin: 'top center', width: `${CARD_WIDTH}px`, height: `${CARD_HEIGHT}px` }}>{children}</div>
+                    </div>
+                );
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col pb-12 relative overflow-x-hidden">
+                    {/* Capture Target (完全に固定・隠しエリア) */}
+                    <div style={{ position: 'fixed', top: 0, left: 0, width: '378px', height: '559px', zIndex: -500, opacity: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+                        <div id="capture-target" style={{ width: '378px', height: '559px', minWidth: '378px' }}>
+                            <NengajoCard 
+                                recipientName={recipientName} 
+                                message={message} 
+                                giftUrl={giftUrl} 
+                                backgroundImage={backgroundImage} 
+                                messageStyle={messageStyle} 
+                                template={selectedTemplate} 
+                                imageScale={imageScale} 
+                                imagePos={imagePos} 
+                                isDragging={false} 
+                                isCapture={true}
+                                isLandscape={isLandscape} 
+                            />
+                        </div>
+                    </div>
+
+                    {/* Result Modal */}
+                    {generatedImage && (
+                        <div className="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center p-4 animate-fade-in-up" onClick={() => setGeneratedImage(null)}>
+                            <div className="bg-white p-4 rounded-2xl max-w-md w-full text-center space-y-4 shadow-2xl relative" onClick={e => e.stopPropagation()}>
+                                <button onClick={() => setGeneratedImage(null)} className="absolute top-2 right-2 text-stone-400 hover:text-stone-600 p-1"><IconX /></button>
+                                <div><h3 className="font-bold text-lg text-stone-800 font-mincho">年賀状ができました！</h3><p className="text-xs text-stone-500 mt-1">下のボタンでSNSへ送るか、<br/>画像を長押しして保存してください</p></div>
+                                <div className="border rounded overflow-hidden shadow-inner bg-stone-100 flex justify-center"><img src={generatedImage} alt="Generated Nengajo" className="max-h-[50vh] w-auto object-contain" /></div>
+                                <div className="flex flex-col gap-3">
+                                    <button onClick={handleShare} className="w-full py-3 rounded-full font-bold text-white transition-colors flex items-center justify-center gap-2" style={{ backgroundColor: selectedTemplate.mainColor }}><IconShare size={20} /> LINEやSNSで送る</button>
+                                    <button onClick={() => setGeneratedImage(null)} className="w-full py-3 rounded-full font-bold text-stone-500 bg-stone-100 hover:bg-stone-200 transition-colors">閉じる</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Header */}
+                    <header className="bg-white border-b border-stone-200 py-4 px-6 sticky top-0 z-30 shadow-sm no-print">
+                        <div className="max-w-6xl mx-auto flex items-center justify-center">
+                            <div className="flex items-center gap-2">
+                                <div className="p-2 rounded-lg text-white" style={{ backgroundColor: selectedTemplate.mainColor }}><IconGift size={20} /></div>
+                                <h1 className="text-xl font-bold tracking-wide text-stone-700 font-mincho">スマホde年賀！</h1>
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* Content */}
+                    <LandingPage onStart={handleStart} mainColor={selectedTemplate.mainColor} />
+
+                    <div ref={generatorRef} className="scroll-mt-20">
+                        <main className="max-w-6xl mx-auto p-4 md:p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 flex-grow w-full animate-fade-in-up">
+                            <div className="space-y-8 no-print">
+                                <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-100">
+                                    <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-stone-600 font-mincho">
+                                        <span className="w-1 h-6 rounded-full" style={{ backgroundColor: selectedTemplate.mainColor }}></span>
+                                        内容入力
+                                    </h2>
+                                    
+                                    {/* Template Selection */}
+                                    <div className="mb-6">
+                                        <label className="flex items-center gap-2 text-sm font-bold text-stone-500 mb-3"><IconPalette size={16} /> デザインを選ぶ</label>
+                                        <div className="grid grid-cols-3 gap-3">
+                                            {TEMPLATES.map(t => (
+                                                <button key={t.id} onClick={() => setSelectedTemplate(t)} className={`flex flex-col items-center gap-2 p-2 rounded-xl border-2 transition-all ${selectedTemplate.id === t.id ? 'border-[#D9333F] bg-red-50' : 'border-stone-100 hover:border-stone-300'}`}>
+                                                    <div 
+                                                        className="w-full h-12 rounded-lg border border-stone-100 relative overflow-hidden"
+                                                        // Template selection preview also needs inline styles
+                                                        style={t.patternStyle}
+                                                    >
+                                                        <div className="absolute inset-0 flex items-center justify-center text-xs" style={{color: t.mainColor}}>2026</div>
+                                                    </div>
+                                                    <span className="text-xs font-bold text-stone-600">{t.name}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-6">
+                                        {/* Inputs */}
+                                        <div className="space-y-2">
+                                            <label className="flex items-center gap-2 text-sm font-bold text-stone-500"><IconUser size={16} /> 宛名</label>
+                                            <input type="text" value={recipientName} onChange={(e) => setRecipientName(e.target.value)} placeholder="例：山田 太郎 様" className="w-full p-3 rounded-xl border border-stone-200 focus:outline-none focus:ring-2" style={{ '--tw-ring-color': selectedTemplate.mainColor }} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="flex items-center gap-2 text-sm font-bold text-stone-500"><IconImage size={16} /> 写真（任意）</label>
+                                            <label className="flex items-center gap-2 text-sm ml-1 mb-0 leading-none text-stone-500">※デフォルトでイラストが設定されています。</label>
+                                            <div className="flex gap-2">
+                                                <input type="file" accept="image/*" ref={fileInputRef} onChange={handleImageUpload} className="hidden" />
+                                                <button onClick={() => fileInputRef.current.click()} className="flex-1 py-3 px-4 border border-dashed border-stone-300 rounded-xl text-stone-500 hover:bg-stone-50 text-sm"><IconImage size={18} /> {backgroundImage ? '写真を変更' : '写真を選択'}</button>
+                                                {backgroundImage && <button onClick={clearImage} className="p-3 border border-stone-200 rounded-xl text-stone-400 hover:text-red-500"><IconTrash size={18} /></button>}
+                                            </div>
+                                            {backgroundImage && <div className="text-xs text-stone-500 mt-1 bg-stone-50 p-2 rounded"><IconHand size={14} className="inline mr-1" /> プレビューで写真の調整ができます</div>}
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="flex items-center gap-2 text-sm font-bold text-stone-500"><IconQrCode size={16} /> デジタルギフトURL（任意）</label>
+                                            <div className="relative">
+                                                <input type="url" value={giftUrl} onChange={(e) => setGiftUrl(e.target.value)} placeholder="https://..." className="w-full p-3 pr-10 rounded-xl border border-stone-200 focus:outline-none focus:ring-2" style={{ '--tw-ring-color': selectedTemplate.mainColor }} />
+                                                {giftUrl && <button onClick={handleCopyUrl} className="absolute right-3 top-3 text-stone-400 hover:text-red-500"><IconCopy size={18} /></button>}
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="flex items-center gap-2 text-sm font-bold text-stone-500"><IconType size={16} /> メッセージ</label>
+                                            <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={6} maxLength={100} className="w-full p-3 rounded-xl border border-stone-200 focus:outline-none focus:ring-2" style={{ '--tw-ring-color': selectedTemplate.mainColor }} />
+                                            <p className="text-right text-xs text-stone-400">{message.length} / 100</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Preview Column */}
+                            <div className="flex flex-col items-center justify-start gap-4 w-full">
+                                <h2 className="text-lg font-bold text-stone-600 no-print flex items-center gap-2 w-full font-mincho">
+                                    <span className="w-1 h-6 rounded-full" style={{ backgroundColor: selectedTemplate.mainColor }}></span> プレビュー
+                                </h2>
+                                <div className="w-full overflow-hidden flex justify-center py-2 no-print select-none">
+                                    <ResponsivePreview>
+                                        <NengajoCard 
+                                            recipientName={recipientName} 
+                                            message={message} 
+                                            giftUrl={giftUrl} 
+                                            backgroundImage={backgroundImage} 
+                                            messageStyle={messageStyle} 
+                                            template={selectedTemplate} 
+                                            imageScale={imageScale} 
+                                            imagePos={imagePos} 
+                                            onDragStart={handleDragStart} 
+                                            onDragMove={handleDragMove} 
+                                            onDragEnd={handleDragEnd} 
+                                            onWheel={handleWheel} 
+                                            isDragging={isDragging} 
+                                            isLandscape={isLandscape} 
+                                        />
+                                    </ResponsivePreview>
+                                </div>
+                            </div>
+                        </main>
+                    
+
+                        {/* Footer (Always Visible now) */}
+                        <div className="max-w-6xl mx-auto px-4 pb-12 pt-4 text-center no-print w-full flex flex-col md:flex-row items-center justify-center gap-4">
+                            <button onClick={handleCreateImage} disabled={isProcessing} className="inline-flex items-center gap-3 px-8 py-4 rounded-full font-bold text-white text-lg transition-all hover:scale-105 active:scale-95 shadow-xl hover:shadow-2xl disabled:opacity-70 disabled:cursor-not-allowed w-full md:w-auto min-w-[300px] justify-center" style={{ backgroundColor: selectedTemplate.mainColor }}>
+                                {isProcessing ? <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> : <IconMagic size={24} />}
+                                <span>{isProcessing ? 'デジタル年賀状を作成' : 'デジタル年賀状を作成'}</span>
+                            </button>
+                            
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
